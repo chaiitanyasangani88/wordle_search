@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 
 export default function Home() {
   const [knownLetters, setKnownLetters] = useState(['', '', '', '', '']); // Position-specific letters
   const [knownLettersWithoutPos, setKnownLettersWithoutPos] = useState(''); // Letters that exist but position unknown
-  const [excludedLetters, setExcludedLetters] = useState(''); // Letters that don't exist
+  const [excludedLetters, setExcludedLetters] = useState(''); // Letters that don&apos;t exist
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [resultCount, setResultCount] = useState(0);
@@ -16,7 +16,7 @@ export default function Home() {
     }, 300); // Debounce for 300ms
 
     return () => clearTimeout(timeoutId);
-  }, [knownLetters, knownLettersWithoutPos, excludedLetters]);
+  }, [knownLetters, knownLettersWithoutPos, excludedLetters, handleSearch]);
 
 
 
@@ -26,7 +26,7 @@ export default function Home() {
     setKnownLetters(newKnownLetters);
   };
 
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     // Build the search query
     let pattern = '';
     let requiredChars = [];
@@ -144,7 +144,7 @@ export default function Home() {
         }
       }
     }
-  };
+  }, [knownLetters, knownLettersWithoutPos, excludedLetters]);
 
 
 
@@ -215,7 +215,7 @@ export default function Home() {
           {/* Known letters without positions */}
           <div className="mb-8">
             <h3 className="text-lg font-medium mb-4 text-gray-700">Known Letters (Position Unknown)</h3>
-            <p className="text-sm text-gray-500 mb-4">Enter letters you know exist in the word but don't know where</p>
+            <p className="text-sm text-gray-500 mb-4">Enter letters you know exist in the word but don&apos;t know where</p>
             
             <div className="flex gap-4 items-center">
               <input
