@@ -9,23 +9,6 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [resultCount, setResultCount] = useState(0);
 
-  // Real-time search effect
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      handleSearch();
-    }, 300); // Debounce for 300ms
-
-    return () => clearTimeout(timeoutId);
-  }, [knownLetters, knownLettersWithoutPos, excludedLetters, handleSearch]);
-
-
-
-  const handleKnownLetterChange = (index, value) => {
-    const newKnownLetters = [...knownLetters];
-    newKnownLetters[index] = value.toUpperCase();
-    setKnownLetters(newKnownLetters);
-  };
-
   const handleSearch = useCallback(async () => {
     // Build the search query
     let pattern = '';
@@ -121,10 +104,12 @@ export default function Home() {
           let filteredResults = containsData.results;
 
           // Apply contains constraint filter
-          filteredResults = filteredResults.filter(word => {
-            const wordUpper = word.toUpperCase();
-            return requiredChars.every(char => wordUpper.includes(char));
-          });
+          if (requiredChars.length > 0) {
+            filteredResults = filteredResults.filter(word => {
+              const wordUpper = word.toUpperCase();
+              return requiredChars.every(char => wordUpper.includes(char));
+            });
+          }
 
           // Apply excluded letters filter
           if (excludedLetters) {
@@ -146,7 +131,20 @@ export default function Home() {
     }
   }, [knownLetters, knownLettersWithoutPos, excludedLetters]);
 
+  // Real-time search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      handleSearch();
+    }, 300); // Debounce for 300ms
 
+    return () => clearTimeout(timeoutId);
+  }, [handleSearch]);
+
+  const handleKnownLetterChange = (index, value) => {
+    const newKnownLetters = [...knownLetters];
+    newKnownLetters[index] = value.toUpperCase();
+    setKnownLetters(newKnownLetters);
+  };
 
   const clearAll = () => {
     setKnownLetters(['', '', '', '', '']);
@@ -156,115 +154,108 @@ export default function Home() {
     setResultCount(0);
   };
 
-
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gray-100">
       <Head>
-        <title>5-Letter Word Search - Advanced Pattern Matching</title>
-        <meta name="description" content="Specialized 5-letter word search with position-specific letters and constraints" />
+        <title>Word Search - Find 5-Letter Words</title>
+        <meta name="description" content="Search for 5-letter words with advanced filtering options" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="min-h-screen flex flex-col">
-        {/* Header */}
-        <div className="bg-white shadow-sm border-b px-6 py-4">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-            5-Letter Word Search
+      <main className="container mx-auto px-4 py-8">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-800 mb-4">
+            Word Search
           </h1>
-          <p className="text-gray-600 mt-1">
-            Real-time search with position-specific letters and constraints
+          <p className="text-lg text-gray-600">
+            Find 5-letter words with advanced pattern matching
           </p>
         </div>
 
-        {/* Split Layout */}
-        <div className="flex-1 flex">
-          {/* Left Panel - Search Interface */}
-          <div className="w-1/2 border-r bg-white p-8">
-            <h2 className="text-2xl font-semibold mb-6 text-gray-800">Search Interface</h2>
-          
-          {/* Position-specific letters */}
-          <div className="mb-8">
-            <h3 className="text-lg font-medium mb-4 text-gray-700">Known Letters at Specific Positions</h3>
-            <p className="text-sm text-gray-500 mb-4">Enter letters you know at specific positions (leave empty for unknown)</p>
+        <div className="flex gap-8">
+          {/* Left Panel - Search Controls */}
+          <div className="w-1/2 bg-white p-8 rounded-lg shadow-lg">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Search Criteria</h2>
             
-            <div className="flex justify-center gap-3 mb-4">
-              {knownLetters.map((letter, index) => (
-                <div key={index} className="flex flex-col items-center">
-                  <div className="text-xs text-gray-500 mb-2">Position {index + 1}</div>
+            {/* Known letters with positions */}
+            <div className="mb-8">
+              <h3 className="text-lg font-medium mb-4 text-gray-700">Known Letters (With Positions)</h3>
+              <p className="text-sm text-gray-500 mb-4">Enter letters you know and their exact positions</p>
+              
+              <div className="flex gap-3 mb-4">
+                {knownLetters.map((letter, index) => (
                   <input
+                    key={index}
                     type="text"
-                    maxLength="1"
+                    maxLength={1}
                     value={letter}
                     onChange={(e) => handleKnownLetterChange(index, e.target.value)}
+                    placeholder="_"
                     className="w-16 h-16 text-center text-2xl font-bold border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent uppercase text-gray-900"
-                    placeholder="?"
                   />
+                ))}
+              </div>
+              
+              <div className="text-sm text-gray-500">
+                Current pattern: 
+                <span className="font-mono bg-gray-100 px-2 py-1 rounded ml-2">
+                  {knownLetters.map(letter => letter || '_').join('')}
+                </span>
+              </div>
+            </div>
+
+            {/* Known letters without positions */}
+            <div className="mb-8">
+              <h3 className="text-lg font-medium mb-4 text-gray-700">Known Letters (Position Unknown)</h3>
+              <p className="text-sm text-gray-500 mb-4">Enter letters you know exist in the word but don&apos;t know where</p>
+              
+              <div className="flex gap-4 items-center">
+                <input
+                  type="text"
+                  value={knownLettersWithoutPos}
+                  onChange={(e) => setKnownLettersWithoutPos(e.target.value.toUpperCase())}
+                  placeholder="e.g., E, A, T"
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-lg uppercase text-gray-900"
+                />
+                <div className="text-sm text-gray-500">
+                  {knownLettersWithoutPos && (
+                    <span>Contains: {knownLettersWithoutPos.split('').join(', ')}</span>
+                  )}
                 </div>
-              ))}
-            </div>
-            
-            <div className="text-center text-sm text-gray-500">
-              Current pattern: <span className="font-mono bg-gray-100 px-3 py-1 rounded">
-                {knownLetters.map(letter => letter || '_').join('')}
-              </span>
-            </div>
-          </div>
-
-          {/* Known letters without positions */}
-          <div className="mb-8">
-            <h3 className="text-lg font-medium mb-4 text-gray-700">Known Letters (Position Unknown)</h3>
-            <p className="text-sm text-gray-500 mb-4">Enter letters you know exist in the word but don&apos;t know where</p>
-            
-            <div className="flex gap-4 items-center">
-              <input
-                type="text"
-                value={knownLettersWithoutPos}
-                onChange={(e) => setKnownLettersWithoutPos(e.target.value.toUpperCase())}
-                placeholder="e.g., E, A, T"
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-lg uppercase text-gray-900"
-              />
-              <div className="text-sm text-gray-500">
-                {knownLettersWithoutPos && (
-                  <span>Contains: {knownLettersWithoutPos.split('').join(', ')}</span>
-                )}
               </div>
             </div>
-          </div>
 
-          {/* Excluded letters */}
-          <div className="mb-8">
-            <h3 className="text-lg font-medium mb-4 text-gray-700">Excluded Letters</h3>
-            <p className="text-sm text-gray-500 mb-4">Enter letters that you know are NOT in the word</p>
-            
-            <div className="flex gap-4 items-center">
-              <input
-                type="text"
-                value={excludedLetters}
-                onChange={(e) => setExcludedLetters(e.target.value.toUpperCase())}
-                placeholder="e.g., X, Y, Z"
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-lg uppercase text-gray-900"
-              />
-              <div className="text-sm text-gray-500">
-                {excludedLetters && (
-                  <span>Excludes: {excludedLetters.split('').join(', ')}</span>
-                )}
+            {/* Excluded letters */}
+            <div className="mb-8">
+              <h3 className="text-lg font-medium mb-4 text-gray-700">Excluded Letters</h3>
+              <p className="text-sm text-gray-500 mb-4">Enter letters that you know are NOT in the word</p>
+              
+              <div className="flex gap-4 items-center">
+                <input
+                  type="text"
+                  value={excludedLetters}
+                  onChange={(e) => setExcludedLetters(e.target.value.toUpperCase())}
+                  placeholder="e.g., X, Y, Z"
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-lg uppercase text-gray-900"
+                />
+                <div className="text-sm text-gray-500">
+                  {excludedLetters && (
+                    <span>Excludes: {excludedLetters.split('').join(', ')}</span>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-
-
-          {/* Clear button only (search is automatic) */}
-          <div className="flex justify-center">
-            <button
-              onClick={clearAll}
-              className="px-6 py-3 bg-gray-500 text-white rounded-lg font-medium hover:bg-gray-600 transition-colors"
-            >
-              Clear All
-            </button>
-          </div>
+            {/* Clear button only (search is automatic) */}
+            <div className="flex justify-center">
+              <button
+                onClick={clearAll}
+                className="px-6 py-3 bg-gray-500 text-white rounded-lg font-medium hover:bg-gray-600 transition-colors"
+              >
+                Clear All
+              </button>
+            </div>
           </div>
 
           {/* Right Panel - Results */}
@@ -312,34 +303,13 @@ export default function Home() {
               )
             ) : (
               <div className="text-center text-gray-500 mt-20">
-                <div>
-                  <div className="text-lg">Start typing to see results</div>
-                  <div className="text-sm mt-2">Enter letters in positions or constraints</div>
-                </div>
-              </div>
-            )}
-
-            {/* Current Search Summary */}
-            {(knownLetters.some(l => l) || knownLettersWithoutPos || excludedLetters) && (
-              <div className="mt-8 pt-6 border-t border-gray-200">
-                <div className="text-sm text-gray-600">
-                  <strong>Current Search:</strong>
-                  <div className="mt-2 font-mono bg-white p-3 rounded border">
-                    Pattern: {knownLetters.map(l => l || '_').join('')}
-                    {knownLettersWithoutPos && ` | Contains: ${knownLettersWithoutPos}`}
-                    {excludedLetters && ` | Excludes: ${excludedLetters}`}
-                  </div>
+                <div className="text-lg">Enter search criteria to find words</div>
+                <div className="text-sm mt-2">
+                  Pattern: {knownLetters.map(l => l || '_').join('')}
                 </div>
               </div>
             )}
           </div>
-        </div>
-
-
-
-                {/* Footer */}
-        <div className="bg-white border-t px-6 py-3 text-center text-sm text-gray-500">
-          Built with Next.js, Trie, and Inverted Index • Real-time search
         </div>
       </main>
     </div>
